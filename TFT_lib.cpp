@@ -10,8 +10,59 @@
 inline void begin_tft_write(void){CS_L;}
 inline void end_tft_write(void){CS_H;}
 
+
+void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)
+{
+  if (_vpOoB) return;
+
+  x+= _xDatum;
+  y+= _yDatum;
+
+  // Range checking
+  if ((x < _vpX) || (y < _vpY) ||(x >= _vpW) || (y >= _vpH)) return;
+
+#ifdef CGRAM_OFFSET
+  x+=colstart;
+  y+=rowstart;
+#endif
+
+#if defined (SSD1963_DRIVER)
+  if ((rotation & 0x1) == 0) { swap_coord(x, y); }
+#endif
+
+  begin_tft_write();
+
+#ifdef MULTI_TFT_SUPPORT
+  // No optimisation
+  DC_C; tft_Write_8(TFT_CASET);
+  DC_D; tft_Write_32D(x);
+  DC_C; tft_Write_8(TFT_PASET);
+  DC_D; tft_Write_32D(y);
+#else
+  // No need to send x if it has not changed (speeds things up)
+  if (addr_col != (x<<16 | x)) {
+    DC_C; tft_Write_8(TFT_CASET);
+    DC_D; tft_Write_32D(x);
+    addr_col = (x<<16 | x);
+  }
+
+  // No need to send y if it has not changed (speeds things up)
+  if (addr_row != (y<<16 | y)) {
+    DC_C; tft_Write_8(TFT_PASET);
+    DC_D; tft_Write_32D(y);
+    addr_row = (y<<16 | y);
+  }
+#endif
+
+  DC_C; tft_Write_8(TFT_RAMWR);
+  DC_D; tft_Write_16(color);
+
+  end_tft_write();
+}
+
 void TFT_Screen::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
 {
+
   if (_vpOoB) return;
 
   x+= _xDatum;
@@ -25,6 +76,7 @@ void TFT_Screen::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
   if ((x + w) > _vpW) w = _vpW - x;
 
   if (w < 1) return;
+
 
   begin_tft_write();
 
@@ -75,8 +127,57 @@ void TFT_Screen::fillEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uin
   end_tft_write();              // Does nothing if Sprite class uses this function
 }
 
+void TFT_Screen::drawEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color)
+{
+  if (rx<2) return;
+  if (ry<2) return;
+  int32_t x, y;
+  int32_t rx2 = rx * rx;
+  int32_t ry2 = ry * ry;
+  int32_t fx2 = 4 * rx2;
+  int32_t fy2 = 4 * ry2;
+  int32_t s;
+
+  //begin_tft_write();          // Sprite class can use this function, avoiding begin_tft_write()
+  inTransaction = true;
+
+  for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
+    // These are ordered to minimise coordinate changes in x or y
+    // drawPixel can then send fewer bounding box commands
+    drawPixel(x0 + x, y0 + y, color);
+    drawPixel(x0 - x, y0 + y, color);
+    drawPixel(x0 - x, y0 - y, color);
+    drawPixel(x0 + x, y0 - y, color);
+    if (s >= 0) {
+      s += fx2 * (1 - y);
+      y--;
+    }
+    s += ry2 * ((4 * x) + 6);
+  }
+
+  for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
+    // These are ordered to minimise coordinate changes in x or y
+    // drawPixel can then send fewer bounding box commands
+    drawPixel(x0 + x, y0 + y, color);
+    drawPixel(x0 - x, y0 + y, color);
+    drawPixel(x0 - x, y0 - y, color);
+    drawPixel(x0 + x, y0 - y, color);
+    if (s >= 0)
+    {
+      s += fy2 * (1 - x);
+      x--;
+    }
+    s += rx2 * ((4 * y) + 6);
+  }
+
+  inTransaction = false;
+  end_tft_write();              // Does nothing if Sprite class uses this function
+}
+
 void TFT_Screen::setRotation(uint8_t m)
 {
+	begin_tft_write();
+
 	  rotation = m % 8; // Limit the range of values to 0-7
 
 	  writecommand(TFT_MADCTL);
@@ -123,6 +224,16 @@ void TFT_Screen::setRotation(uint8_t m)
 	      _height = _init_width;
 	      break;
 	  }
+
+	  delayMicroseconds(10);
+
+	  end_tft_write();
+
+	  addr_row = 0xFFFF;
+	  addr_col = 0xFFFF;
+
+	  // Reset the viewport to the whole screen
+	  resetViewport();
 }
 
 void TFT_Screen::setWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
@@ -355,8 +466,8 @@ TFT_Screen::TFT_Screen(int16_t w, int16_t h)
 
 	  resetViewport();
 
-	  _width = w;
-	  _height = h;
+	  _init_width  = _width  = w; // Set by specific xxxxx_Defines.h file or by users sketch
+	  _init_height = _height = h; // Set by specific xxxxx_Defines.h file or by users sketch
 
 	  inTransaction = false;
 
