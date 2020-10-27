@@ -50,10 +50,12 @@
 // A lookup table is used to set the different bit patterns, this uses 1kByte of RAM
 #define set_mask(C) xset_mask[C] // 63fps Sprite rendering test 33% faster, graphicstest only 1.8% faster than shifting in real time
 
-// Write 8 bits to TFT
-#define tft_Write_8(C)  GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C));WR_L; WR_H;  //WR_H
+// Write 8 bits to TFT if you get a render error add a  delay
+//#define tft_Write_8(C)  delay(0.1); GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C));WR_L; WR_H;  //WR_H#
+//replaced with inline void
+//#define tft_Write_8(C)    GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C));WR_L; WR_H;  //WR_H
 
-#define tft_Write_16(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_L;WR_H; \
+#define tft_Write_16(C)  GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_L;WR_H; \
                            GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_L;WR_H
 
 

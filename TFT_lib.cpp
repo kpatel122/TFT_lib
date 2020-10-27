@@ -10,6 +10,121 @@
 inline void begin_tft_write(void){CS_L;}
 inline void end_tft_write(void){CS_H;}
 
+void TFT_Screen::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
+{
+  if (_vpOoB) return;
+
+  x+= _xDatum;
+  y+= _yDatum;
+
+  // Clipping
+  if ((y < _vpY) || (x >= _vpW) || (y >= _vpH)) return;
+
+  if (x < _vpX) { w += x - _vpX; x = _vpX; }
+
+  if ((x + w) > _vpW) w = _vpW - x;
+
+  if (w < 1) return;
+
+  begin_tft_write();
+
+  setWindow(x, y, x + w - 1, y);
+
+  pushBlock(color, w);
+
+  end_tft_write();
+}
+
+void TFT_Screen::fillEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color)
+{
+  if (rx<2) return;
+  if (ry<2) return;
+  int32_t x, y;
+  int32_t rx2 = rx * rx;
+  int32_t ry2 = ry * ry;
+  int32_t fx2 = 4 * rx2;
+  int32_t fy2 = 4 * ry2;
+  int32_t s;
+
+  //begin_tft_write();          // Sprite class can use this function, avoiding begin_tft_write()
+  inTransaction = true;
+
+  for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
+    drawFastHLine(x0 - x, y0 - y, x + x + 1, color);
+    drawFastHLine(x0 - x, y0 + y, x + x + 1, color);
+
+    if (s >= 0) {
+      s += fx2 * (1 - y);
+      y--;
+    }
+    s += ry2 * ((4 * x) + 6);
+  }
+
+  for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
+    drawFastHLine(x0 - x, y0 - y, x + x + 1, color);
+    drawFastHLine(x0 - x, y0 + y, x + x + 1, color);
+
+    if (s >= 0) {
+      s += fy2 * (1 - x);
+      x--;
+    }
+    s += rx2 * ((4 * y) + 6);
+  }
+
+  inTransaction = false;
+  end_tft_write();              // Does nothing if Sprite class uses this function
+}
+
+void TFT_Screen::setRotation(uint8_t m)
+{
+	  rotation = m % 8; // Limit the range of values to 0-7
+
+	  writecommand(TFT_MADCTL);
+	  switch (rotation) {
+	    case 0:
+	      writedata(TFT_MAD_MX | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_width;
+	      _height = _init_height;
+	      break;
+	    case 1:
+	      writedata(TFT_MAD_MV | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_height;
+	      _height = _init_width;
+	      break;
+	    case 2:
+	      writedata(TFT_MAD_MY | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_width;
+	      _height = _init_height;
+	      break;
+	    case 3:
+	      writedata(TFT_MAD_MX | TFT_MAD_MY | TFT_MAD_MV | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_height;
+	      _height = _init_width;
+	      break;
+	  // These next rotations are for bottom up BMP drawing
+	    case 4:
+	      writedata(TFT_MAD_MX | TFT_MAD_MY | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_width;
+	      _height = _init_height;
+	      break;
+	    case 5:
+	      writedata(TFT_MAD_MV | TFT_MAD_MX | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_height;
+	      _height = _init_width;
+	      break;
+	    case 6:
+	      writedata(TFT_MAD_COLOR_ORDER);
+	      _width  = _init_width;
+	      _height = _init_height;
+	      break;
+	    case 7:
+	      writedata(TFT_MAD_MY | TFT_MAD_MV | TFT_MAD_COLOR_ORDER);
+	      _width  = _init_height;
+	      _height = _init_width;
+	      break;
+	  }
+}
+
 void TFT_Screen::setWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
 
@@ -62,7 +177,7 @@ void TFT_Screen::writedata(uint8_t d)
 }
 
 
-void TFT_Screen::init_lcd()
+void TFT_Screen::initLcd()
 {
 
 	  digitalWrite(TFT_REST,HIGH);
@@ -164,9 +279,28 @@ void TFT_Screen::init_lcd()
 
 void TFT_Screen::init()
 {
-	init_lcd();
+	initLcd();
+
 }
 
+void TFT_Screen::resetViewport(void)
+{
+  // Reset viewport to the whole screen
+  _xDatum = 0;
+  _yDatum = 0;
+  _vpX = 0;
+  _vpY = 0;
+  _vpW = _width;
+  _vpH = _height;
+  _xWidth  = _width;
+  _yHeight = _height;
+
+  _vpDatum = false;
+  _vpOoB   = false;
+}
+
+
+//constructor
 TFT_Screen::TFT_Screen(int16_t w, int16_t h)
 {
 
@@ -219,8 +353,20 @@ TFT_Screen::TFT_Screen(int16_t w, int16_t h)
 
 	  CONSTRUCTOR_INIT_TFT_DATA_BUS;
 
+	  resetViewport();
+
 	  _width = w;
 	  _height = h;
+
+	  inTransaction = false;
+
+	  addr_row = 0xFFFF;
+	  addr_col = 0xFFFF;
+
+	 // _xpivot = 0;
+	 // _ypivot = 0;
+
+	  resetViewport();
 }
 
 
