@@ -165,8 +165,6 @@ void TFT_Screen::init_lcd()
 void TFT_Screen::init()
 {
 	init_lcd();
-
-
 }
 
 TFT_Screen::TFT_Screen(int16_t w, int16_t h)
