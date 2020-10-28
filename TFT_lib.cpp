@@ -60,6 +60,88 @@ void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)
   end_tft_write();
 }
 
+void TFT_Screen::fillCircle(int32_t x0, int32_t y0, int32_t r, uint32_t color)
+{
+  int32_t  x  = 0;
+  int32_t  dx = 1;
+  int32_t  dy = r+r;
+  int32_t  p  = -(r>>1);
+
+  //begin_tft_write();          // Sprite class can use this function, avoiding begin_tft_write()
+  inTransaction = true;
+
+  drawFastHLine(x0 - r, y0, dy+1, color);
+
+  while(x<r){
+
+    if(p>=0) {
+      drawFastHLine(x0 - x, y0 + r, dx, color);
+      drawFastHLine(x0 - x, y0 - r, dx, color);
+      dy-=2;
+      p-=dy;
+      r--;
+    }
+
+    dx+=2;
+    p+=dx;
+    x++;
+
+    drawFastHLine(x0 - r, y0 + x, dy+1, color);
+    drawFastHLine(x0 - r, y0 - x, dy+1, color);
+
+  }
+
+  inTransaction = false;
+  end_tft_write();              // Does nothing if Sprite class uses this function
+}
+
+void TFT_Screen::drawCircle(int32_t x0, int32_t y0, int32_t r, uint32_t color)
+{
+  int32_t  x  = 1;
+  int32_t  dx = 1;
+  int32_t  dy = r+r;
+  int32_t  p  = -(r>>1);
+
+  //begin_tft_write();          // Sprite class can use this function, avoiding begin_tft_write()
+  inTransaction = true;
+
+  // These are ordered to minimise coordinate changes in x or y
+  // drawPixel can then send fewer bounding box commands
+  drawPixel(x0 + r, y0, color);
+  drawPixel(x0 - r, y0, color);
+  drawPixel(x0, y0 - r, color);
+  drawPixel(x0, y0 + r, color);
+
+  while(x<r){
+
+    if(p>=0) {
+      dy-=2;
+      p-=dy;
+      r--;
+    }
+
+    dx+=2;
+    p+=dx;
+
+    // These are ordered to minimise coordinate changes in x or y
+    // drawPixel can then send fewer bounding box commands
+    drawPixel(x0 + x, y0 + r, color);
+    drawPixel(x0 - x, y0 + r, color);
+    drawPixel(x0 - x, y0 - r, color);
+    drawPixel(x0 + x, y0 - r, color);
+    if (r != x) {
+      drawPixel(x0 + r, y0 + x, color);
+      drawPixel(x0 - r, y0 + x, color);
+      drawPixel(x0 - r, y0 - x, color);
+      drawPixel(x0 + r, y0 - x, color);
+    }
+    x++;
+  }
+
+  inTransaction = false;
+  end_tft_write();              // Does nothing if Sprite class uses this function
+}
+
 void TFT_Screen::fillCircleHelper(int32_t x0, int32_t y0, int32_t r, uint8_t cornername, int32_t delta, uint32_t color)
 {
   int32_t f     = 1 - r;

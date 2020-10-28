@@ -32,8 +32,12 @@ class TFT_Screen {
 	void drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color);
 	void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color);
 	void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color);
-	void drawCircleHelper( int32_t x0, int32_t y0, int32_t r, uint8_t cornername, uint32_t color);
-	void fillCircleHelper(int32_t x0, int32_t y0, int32_t r, uint8_t cornername, int32_t delta, uint32_t color);
+
+
+	void drawCircle(int32_t x, int32_t y, int32_t r, uint32_t color);
+	void drawCircleHelper(int32_t x, int32_t y, int32_t r, uint8_t cornername, uint32_t color);
+	void fillCircle(int32_t x, int32_t y, int32_t r, uint32_t color);
+	void fillCircleHelper(int32_t x, int32_t y, int32_t r, uint8_t cornername, int32_t delta, uint32_t color);
 
 
 	void init();
