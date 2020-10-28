@@ -29,6 +29,12 @@ class TFT_Screen {
 	void drawEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color);
 	void drawPixel(int32_t x, int32_t y, uint32_t color);
 	void drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color);
+	void drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color);
+	void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color);
+	void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color);
+	void drawCircleHelper( int32_t x0, int32_t y0, int32_t r, uint8_t cornername, uint32_t color);
+	void fillCircleHelper(int32_t x0, int32_t y0, int32_t r, uint8_t cornername, int32_t delta, uint32_t color);
+
 
 	void init();
 

@@ -60,6 +60,130 @@ void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)
   end_tft_write();
 }
 
+void TFT_Screen::fillCircleHelper(int32_t x0, int32_t y0, int32_t r, uint8_t cornername, int32_t delta, uint32_t color)
+{
+  int32_t f     = 1 - r;
+  int32_t ddF_x = 1;
+  int32_t ddF_y = -r - r;
+  int32_t y     = 0;
+
+  delta++;
+
+  while (y < r) {
+    if (f >= 0) {
+      if (cornername & 0x1) drawFastHLine(x0 - y, y0 + r, y + y + delta, color);
+      if (cornername & 0x2) drawFastHLine(x0 - y, y0 - r, y + y + delta, color);
+      r--;
+      ddF_y += 2;
+      f     += ddF_y;
+    }
+
+    y++;
+    ddF_x += 2;
+    f     += ddF_x;
+
+    if (cornername & 0x1) drawFastHLine(x0 - r, y0 + y, r + r + delta, color);
+    if (cornername & 0x2) drawFastHLine(x0 - r, y0 - y, r + r + delta, color);
+  }
+}
+void TFT_Screen::drawCircleHelper( int32_t x0, int32_t y0, int32_t r, uint8_t cornername, uint32_t color)
+{
+  int32_t f     = 1 - r;
+  int32_t ddF_x = 1;
+  int32_t ddF_y = -2 * r;
+  int32_t x     = 0;
+
+  while (x < r) {
+    if (f >= 0) {
+      r--;
+      ddF_y += 2;
+      f     += ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f     += ddF_x;
+    if (cornername & 0x4) {
+      drawPixel(x0 + x, y0 + r, color);
+      drawPixel(x0 + r, y0 + x, color);
+    }
+    if (cornername & 0x2) {
+      drawPixel(x0 + x, y0 - r, color);
+      drawPixel(x0 + r, y0 - x, color);
+    }
+    if (cornername & 0x8) {
+      drawPixel(x0 - r, y0 + x, color);
+      drawPixel(x0 - x, y0 + r, color);
+    }
+    if (cornername & 0x1) {
+      drawPixel(x0 - r, y0 - x, color);
+      drawPixel(x0 - x, y0 - r, color);
+    }
+  }
+}
+
+
+void TFT_Screen::drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color)
+{
+  if (_vpOoB) return;
+
+  x+= _xDatum;
+  y+= _yDatum;
+
+  // Clipping
+  if ((x < _vpX) || (x >= _vpW) || (y >= _vpH)) return;
+
+  if (y < _vpY) { h += y - _vpY; y = _vpY; }
+
+  if ((y + h) > _vpH) h = _vpH - y;
+
+  if (h < 1) return;
+
+  begin_tft_write();
+
+  setWindow(x, y, x, y + h - 1);
+
+  pushBlock(color, h);
+
+  end_tft_write();
+}
+
+void TFT_Screen::drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color)
+{
+	 //begin_tft_write();          // Sprite class can use this function, avoiding begin_tft_write()
+	  inTransaction = true;
+
+	  // smarter version
+	  drawFastHLine(x + r  , y    , w - r - r, color); // Top
+	  drawFastHLine(x + r  , y + h - 1, w - r - r, color); // Bottom
+	  drawFastVLine(x    , y + r  , h - r - r, color); // Left
+	  drawFastVLine(x + w - 1, y + r  , h - r - r, color); // Right
+	  // draw four corners
+	  drawCircleHelper(x + r    , y + r    , r, 1, color);
+	  drawCircleHelper(x + w - r - 1, y + r    , r, 2, color);
+	  drawCircleHelper(x + w - r - 1, y + h - r - 1, r, 4, color);
+	  drawCircleHelper(x + r    , y + h - r - 1, r, 8, color);
+
+	  inTransaction = false;
+	  end_tft_write();              //
+
+}
+
+void TFT_Screen::fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color)
+{
+  //begin_tft_write();          // Sprite class can use this function, avoiding begin_tft_write()
+  inTransaction = true;
+
+  // smarter version
+  fillRect(x, y + r, w, h - r - r, color);
+
+  // draw four corners
+  fillCircleHelper(x + r, y + h - r - 1, r, 1, w - r - r - 1, color);
+  fillCircleHelper(x + r    , y + r, r, 2, w - r - r - 1, color);
+
+  inTransaction = false;
+  end_tft_write();              // Does nothing if Sprite class uses this function
+}
+
 void TFT_Screen::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
 {
 
