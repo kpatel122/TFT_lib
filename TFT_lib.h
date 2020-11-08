@@ -29,6 +29,7 @@ class TFT_Screen {
 	void drawEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color);
 	void drawPixel(int32_t x, int32_t y, uint32_t color);
 	void drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color);
+	void drawFastHLineToBuffer(int32_t x, int32_t y, int32_t w, uint8_t color,int32_t  bufferWidth,uint8_t *pBuffer);
 	void drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color);
 	void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color);
 	void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color);
@@ -37,6 +38,7 @@ class TFT_Screen {
 	void drawCircle(int32_t x, int32_t y, int32_t r, uint32_t color);
 	void drawCircleHelper(int32_t x, int32_t y, int32_t r, uint8_t cornername, uint32_t color);
 	void fillCircle(int32_t x, int32_t y, int32_t r, uint32_t color);
+	void fillCircleToBuffer(int32_t x0, int32_t y0,int32_t r, uint8_t color,int32_t  bufferWidth, uint8_t *pBuffer);
 	void fillCircleHelper(int32_t x, int32_t y, int32_t r, uint8_t cornername, int32_t delta, uint32_t color);
 
 
@@ -71,6 +73,15 @@ protected:
   private:
 
 	inline void tft_Write_8(uint8_t C)  {   GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C));WR_L; WR_H; } //WR_H
+
+	inline void tft_Write_32C(int32_t C,int32_t D) {
+
+	GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_L;WR_H;
+    GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_L;WR_H;
+    GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((D) >> 8)); WR_L;WR_H;
+    GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((D) >> 0)); WR_L;WR_H;
+	}
+
 
     // Bit masks for ESP32 parallel bus interface
    uint32_t xclr_mask, xdir_mask; // Port set/clear and direction control masks

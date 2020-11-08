@@ -60,6 +60,39 @@ void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)
   end_tft_write();
 }
 
+void TFT_Screen::fillCircleToBuffer(int32_t x0, int32_t y0,int32_t r, uint8_t color,int32_t  bufferWidth, uint8_t *pBuffer)
+{
+	int32_t  x  = 0;
+	int32_t  dx = 1;
+	int32_t  dy = r+r;
+	int32_t  p  = -(r>>1);
+
+
+
+	drawFastHLineToBuffer(x0 - r, y0, dy+1, color,bufferWidth,pBuffer);
+
+	while(x<r){
+
+		if(p>=0) {
+			drawFastHLineToBuffer(x0 - x, y0 + r, dx, color,bufferWidth,pBuffer);
+			drawFastHLineToBuffer(x0 - x, y0 - r, dx, color,bufferWidth,pBuffer);
+			dy-=2;
+			p-=dy;
+			r--;
+		}
+
+		dx+=2;
+		p+=dx;
+		x++;
+
+		drawFastHLineToBuffer(x0 - r, y0 + x, dy+1, color,bufferWidth,pBuffer);
+		drawFastHLineToBuffer(x0 - r, y0 - x, dy+1, color,bufferWidth,pBuffer);
+
+	}
+
+
+}
+
 void TFT_Screen::fillCircle(int32_t x0, int32_t y0, int32_t r, uint32_t color)
 {
   int32_t  x  = 0;
@@ -266,6 +299,18 @@ void TFT_Screen::fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32
   end_tft_write();              // Does nothing if Sprite class uses this function
 }
 
+void TFT_Screen::drawFastHLineToBuffer(int32_t x, int32_t y, int32_t w, uint8_t color,int32_t  bufferWidth,uint8_t *pBuffer)
+{
+	int index = (y * bufferWidth) + x;
+
+
+
+	for (int i = 0; i < w; i++)
+	{
+		pBuffer[index + i] = color;
+	}
+}
+
 void TFT_Screen::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
 {
 
@@ -467,7 +512,7 @@ void TFT_Screen::fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t c
 
 	  setWindow(x, y, x + w - 1, y + h - 1);
 
-	  DC_D;
+	  //DC_D;
 	  pushBlock(color, w * h);
 	  end_tft_write();
 

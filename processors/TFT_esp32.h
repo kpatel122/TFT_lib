@@ -62,11 +62,13 @@
  // Write two concatenated 16 bit values to TFT
 
  // Write two concatenated 16 bit values to TFT
+
+/*
  #define tft_Write_32C(C,D) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_L;WR_H; \
                              GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_L;WR_H; \
                              GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((D) >> 8)); WR_L;WR_H; \
                              GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((D) >> 0)); WR_L;WR_H
-
+*/
 
   // Write 16 bit value twice to TFT - used by drawPixel()
   #define tft_Write_32D(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_L;WR_H; \
