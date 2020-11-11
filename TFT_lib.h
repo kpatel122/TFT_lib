@@ -13,7 +13,16 @@
   #include "Processors/TFT_esp32.h"
 #endif
 
-
+typedef struct
+{
+	uint16_t width;
+	uint16_t height;
+	uint16_t posX;
+	uint16_t posY;
+	uint8_t *pPixelData;
+	uint16_t *pColours; //indexed colours
+	uint8_t numColours;
+}TFT_Bitmap_t;
 
 
 class TFT_Screen {
@@ -33,6 +42,8 @@ class TFT_Screen {
 	void drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color);
 	void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color);
 	void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color);
+	void drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex);
+	void drawBitmap(TFT_Bitmap_t *pBitmap);
 
 
 	void drawCircle(int32_t x, int32_t y, int32_t r, uint32_t color);
@@ -81,6 +92,8 @@ protected:
     GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((D) >> 8)); WR_L;WR_H;
     GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((D) >> 0)); WR_L;WR_H;
 	}
+
+
 
 
     // Bit masks for ESP32 parallel bus interface

@@ -10,6 +10,24 @@
 inline void begin_tft_write(void){CS_L;}
 inline void end_tft_write(void){CS_H;}
 
+void TFT_Screen::drawBitmap(TFT_Bitmap_t *pBitmap)
+{
+	drawBitmap(pBitmap->posX,pBitmap->posY, pBitmap->width,pBitmap->height, pBitmap->pPixelData, pBitmap->pColours, pBitmap->numColours);
+}
+void TFT_Screen::drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex)
+{
+	uint16_t colour;
+	uint32_t index = 0;
+	for (int row = 0; row < height; row++)
+	{
+		for (int col = 0; col < width; col++)
+		{
+			index = (row * width) + col;
+			colour = pPixels[index];
+			drawPixel(x+row,y+col,colourIndex[colour]);
+		}
+	}
+}
 
 void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)
 {
@@ -329,13 +347,16 @@ void TFT_Screen::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
   if (w < 1) return;
 
 
+
   begin_tft_write();
 
   setWindow(x, y, x + w - 1, y);
 
+
   pushBlock(color, w);
 
   end_tft_write();
+
 }
 
 void TFT_Screen::fillEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color)
@@ -494,11 +515,17 @@ void TFT_Screen::setWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
   addr_col = 0xFFFF;
 
   DC_C; tft_Write_8(TFT_CASET);
+  //delay(0.1); //k
   DC_D; tft_Write_32C(x0, x1);
+  //delay(0.1); //k
   DC_C; tft_Write_8(TFT_PASET);
+  //delay(0.1);
   DC_D; tft_Write_32C(y0, y1);
+  //delay(0.1);
   DC_C; tft_Write_8(TFT_RAMWR);
+  //delay(0.1);
   DC_D;
+  //delay(0.1);
 
 }
 
