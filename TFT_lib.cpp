@@ -10,6 +10,9 @@
 inline void begin_tft_write(void){CS_L;}
 inline void end_tft_write(void){CS_H;}
 
+
+
+
 void TFT_Screen::drawBitmap(TFT_Bitmap_t *pBitmap)
 {
 	drawBitmap(pBitmap->posX,pBitmap->posY, pBitmap->width,pBitmap->height, pBitmap->pPixelData, pBitmap->pColours, pBitmap->numColours);
@@ -25,8 +28,11 @@ void TFT_Screen::drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t heigh
 			index = (row * width) + col;
 			colour = pPixels[index];
 			drawPixel(x+row,y+col,colourIndex[colour]);
+
 		}
+
 	}
+	delay(0.1);
 }
 
 void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)

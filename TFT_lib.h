@@ -34,6 +34,7 @@ class TFT_Screen {
 	  // Graphics drawing
 	void fillScreen(uint32_t color);
 	void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t color);
+
 	void fillEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color);
 	void drawEllipse(int16_t x0, int16_t y0, int32_t rx, int32_t ry, uint16_t color);
 	void drawPixel(int32_t x, int32_t y, uint32_t color);
@@ -63,6 +64,8 @@ class TFT_Screen {
 	void initLcd();
 	void setRotation(uint8_t m);
 	void resetViewport();
+	int32_t getScreenWidth(){return _width;}
+	int32_t getScreenHeight(){return _height;}
 
 	uint8_t rotation;  // Display rotation (0-3)
 
