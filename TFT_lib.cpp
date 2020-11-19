@@ -17,6 +17,10 @@ void TFT_Screen::drawBitmap(TFT_Bitmap_t *pBitmap)
 {
 	drawBitmap(pBitmap->posX,pBitmap->posY, pBitmap->width,pBitmap->height, pBitmap->pPixelData, pBitmap->pColours, pBitmap->numColours);
 }
+void TFT_Screen::drawBitmap(TFT_Bitmap_t *pBitmap, uint16_t alpha)
+{
+	drawBitmap(pBitmap->posX,pBitmap->posY, pBitmap->width,pBitmap->height, pBitmap->pPixelData, pBitmap->pColours, pBitmap->numColours,alpha);
+}
 void TFT_Screen::drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex)
 {
 	uint16_t colour;
@@ -33,6 +37,46 @@ void TFT_Screen::drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t heigh
 
 	}
 	delay(0.1);
+}
+
+//doesn't draw the alpha colour
+void TFT_Screen::drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex, uint16_t alpha)
+{
+	uint16_t pixel;
+	uint16_t colour;
+	uint32_t index = 0;
+	for (int row = 0; row < height; row++)
+	{
+		for (int col = 0; col < width; col++)
+		{
+			index = (row * width) + col;
+			pixel = pPixels[index];
+			colour = colourIndex[pixel];
+			if(colour != alpha)
+				drawPixel(x+row,y+col,colour);
+		}
+	}
+	delay(0.1);
+}
+
+void TFT_Screen::drawBitmapMirrored(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex, uint16_t alpha)
+{
+	uint16_t pixel;
+	uint16_t colour;
+	uint32_t index = 0;
+	for (int row = 0; row < height; row++)
+	{
+		for (int col = 0; col < width; col++)
+		{
+			index = (row * width) + col;
+			pixel = pPixels[index];
+			colour = colourIndex[pixel];
+			if(colour != alpha)
+				drawPixel(x+row,y+(width - col),colour);
+		}
+	}
+	delay(0.1);
+
 }
 
 void TFT_Screen::drawPixel(int32_t x, int32_t y, uint32_t color)

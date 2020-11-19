@@ -22,6 +22,7 @@ typedef struct
 	uint8_t *pPixelData;
 	uint16_t *pColours; //indexed colours
 	uint8_t numColours;
+	uint16_t alpha;
 }TFT_Bitmap_t;
 
 
@@ -44,7 +45,10 @@ class TFT_Screen {
 	void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t color);
 	void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color);
 	void drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex);
+	void drawBitmap(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex, uint16_t alpha);
+	void drawBitmapMirrored(uint16_t x,uint16_t y, uint16_t width,uint16_t height, uint8_t *pPixels, uint16_t *colourIndex, uint8_t maxIndex, uint16_t alpha);
 	void drawBitmap(TFT_Bitmap_t *pBitmap);
+	void drawBitmap(TFT_Bitmap_t *pBitmap ,uint16_t alpha);
 
 
 	void drawCircle(int32_t x, int32_t y, int32_t r, uint32_t color);
